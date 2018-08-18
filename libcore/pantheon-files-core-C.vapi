@@ -164,6 +164,8 @@ namespace GOF {
         public GLib.List<string>? emblems_list;
         public GLib.FileInfo? info;
         public string basename;
+        public string custom_display_name;
+        public string custom_icon_name;
         public string uri;
         public uint64 size;
         public string format_size;
@@ -224,6 +226,7 @@ namespace GOF {
         public void update_desktop_file ();
         public void query_update ();
         public void query_thumbnail_update ();
+        public void update_formated_type ();
         public bool ensure_query_info ();
         public unowned string? get_thumbnail_path();
         public bool can_set_owner ();

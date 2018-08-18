@@ -79,7 +79,7 @@ namespace Marlin {
         public override void render (Cairo.Context cr, Gtk.Widget widget, Gdk.Rectangle background_area,
                                      Gdk.Rectangle cell_area, Gtk.CellRendererState flags) {
 
-            if (file == null || pixbuf == null) {
+            if (file == null || pixbuf == null || !(pixbuf is Gdk.Pixbuf)) {
                 return;
             }
 
@@ -281,25 +281,39 @@ namespace Marlin {
         }
 
         public override void get_preferred_width (Gtk.Widget widget, out int minimum_size, out int natural_size) {
+            minimum_size = 16;
+            natural_size = minimum_size;
+
             var new_scale = widget.get_scale_factor ();
             if (icon_scale != new_scale) {
                 icon_scale = new_scale;
                 _file.update_icon (icon_size, icon_scale);
             }
 
-            minimum_size = (pixbuf.get_width () + Marlin.IconSize.EMBLEM / 2) / icon_scale ;
-            natural_size = minimum_size;
+            if (pixbuf == null || !(pixbuf is Gdk.Pixbuf)) {
+                return;
+            } else {
+                minimum_size = (pixbuf.get_width () + Marlin.IconSize.EMBLEM / 2) / icon_scale ;
+                natural_size = minimum_size;
+            }
         }
 
         public override void get_preferred_height (Gtk.Widget widget, out int minimum_size, out int natural_size) {
+            minimum_size = 16;
+            natural_size = minimum_size;
+
             var new_scale = widget.get_scale_factor ();
             if (icon_scale != new_scale) {
                 icon_scale = new_scale;
                 _file.update_icon (icon_size, icon_scale);
             }
 
-            minimum_size = int.max (helper_size + helper_size / 2, pixbuf.get_height () / icon_scale + Marlin.IconSize.EMBLEM / 2);
-            natural_size = minimum_size;
+            if (pixbuf == null || !(pixbuf is Gdk.Pixbuf)) {
+                return;
+            } else {
+                minimum_size = int.max (helper_size + helper_size / 2, pixbuf.get_height () / icon_scale + Marlin.IconSize.EMBLEM / 2);
+                natural_size = minimum_size;
+            }
         }
 
         /* We still have to implement this even though it is deprecated, else compiler complains.

@@ -236,7 +236,7 @@ gof_file_is_remote_uri_scheme (GOFFile *file)
 gboolean
 gof_file_is_root_network_folder (GOFFile *file)
 {
-    return (gof_file_is_network_uri_scheme (file) || gof_file_is_smb_server (file));
+    return (!gof_file_is_recent_uri_scheme && gof_file_is_network_uri_scheme (file) || gof_file_is_smb_server (file));
 }
 
 gboolean
@@ -260,8 +260,9 @@ gof_file_is_smb_uri_scheme (GOFFile *file)
 gboolean
 gof_file_is_recent_uri_scheme (GOFFile *file)
 {
-    if (!G_IS_FILE (file->location))
+    if (!GOF_IS_FILE (file) || !G_IS_FILE (file->location)) {
         return TRUE;
+    }
 
     return g_file_has_uri_scheme (file->location, "recent");
 }
@@ -333,7 +334,7 @@ gof_file_update_size (GOFFile *file)
     }
 }
 
-static void
+void
 gof_file_update_formated_type (GOFFile *file)
 {
     gchar *formated_type = NULL;
@@ -379,6 +380,10 @@ gof_file_update (GOFFile *file)
     gchar *p;
 
     g_return_if_fail (file->info != NULL);
+
+    if (gof_file_is_recent_uri_scheme && file->is_directory) {
+        return;
+    }
 
     /* free previously allocated */
     gof_file_clear_info (file);
@@ -490,7 +495,9 @@ gof_file_update (GOFFile *file)
                 !(strcmp (g_file_get_uri (file->target_location), "smb:///") == 0)) {
                 /* Show protocol after server name (lp:1184606) */
                 file->custom_display_name = g_strdup_printf ("%s (%s)", g_file_info_get_display_name (file->info),
-                                                                        g_utf8_strup (g_file_get_uri_scheme (file->target_location), -1));
+                                                                        g_file_get_uri_scheme (file->target_location));
+            } else if (file->target_location != NULL && file->directory != NULL && g_file_has_uri_scheme (file->directory, "recent")) {
+                file->custom_display_name = pf_file_utils_limited_length_path (g_file_get_path (file->target_location), 50);
             } else {
                 file->custom_display_name = g_strdup (g_file_info_get_display_name (file->info));
             }
@@ -1133,6 +1140,10 @@ gof_file_compare_for_sort (GOFFile *file1,
                            gboolean directories_first,
                            gboolean reversed)
 {
+    if (!GOF_IS_FILE (file1) || !GOF_IS_FILE (file2)) {
+        return 0;
+    }
+
     int result;
 
     if (file1 == file2) {
@@ -1877,7 +1888,7 @@ gof_file_is_folder (GOFFile *file)
     }
 
     /* TODO check this works for non-local files and other uri schemes*/
-    if ((file->is_directory && !gof_file_is_root_network_folder (file)))
+    if ((file->is_directory && (gof_file_is_recent_uri_scheme || !gof_file_is_root_network_folder (file))))
         return TRUE;
 
     if (gof_file_is_smb_share (file))

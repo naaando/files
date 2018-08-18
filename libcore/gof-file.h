@@ -170,6 +170,7 @@ void            gof_file_update_type (GOFFile *file);
 void            gof_file_update_icon (GOFFile *file, gint size, gint scale);
 void            gof_file_update_desktop_file (GOFFile *file);
 void            gof_file_update_trash_info (GOFFile *file);
+void            gof_file_update_formated_type (GOFFile *file);
 void            gof_file_update_emblem (GOFFile *file);
 void            gof_file_get_folder_icon_from_uri_or_path (GOFFile *file);
 

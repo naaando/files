@@ -574,6 +574,10 @@ public class Async : Object {
         bool show_hidden = is_trash || Preferences.get_default ().show_hidden_files;
         foreach (GOF.File gof in file_hash.get_values ()) {
             if (gof != null) {
+                if (is_recent && gof.is_directory) {
+                    gof.update_formated_type ();
+                    gof.get_folder_icon_from_uri_or_path ();
+                }
                 after_load_file (gof, show_hidden, file_loaded_func);
             }
         }
@@ -652,6 +656,41 @@ public class Async : Object {
 
                             file_hash.insert (gof.location, gof);
                             after_load_file (gof, show_hidden, file_loaded_func);
+
+                            if (is_recent) {
+                                var parent = gof.get_target_location ().get_parent ();
+                                var fake_item = GLib.File.new_for_uri ("recent:///" + parent.hash ().to_string ());
+                                var mod_time = file_info.get_attribute_uint64 (GLib.FileAttribute.TIME_MODIFIED);
+
+                                gof = GOF.File.cache_lookup (loc);
+
+                                if (gof == null) {
+                                    gof = new GOF.File (loc, location); /*does not add to GOF file cache */
+                                    var fake_info = new GLib.FileInfo ();
+                                    fake_info.set_attribute_uint64 (GLib.FileAttribute.TIME_MODIFIED, mod_time);
+                                    fake_info.set_content_type ("inode/directory");
+                                    gof.info = fake_info;
+                                    gof.is_directory = true;
+                                    gof.custom_icon_name = "folder";
+                                    gof.custom_display_name = PF.FileUtils.limited_length_path (
+                                                                PF.FileUtils.sanitize_path(parent.get_uri ()), 50);
+                                    var dt = new DateTime.from_unix_local ((int64)mod_time);
+                                    gof.formated_modified = PF.FileUtils.get_formatted_date_time (dt);
+                                    gof.update_formated_type ();
+                                    gof.get_folder_icon_from_uri_or_path ();
+                                    gof.target_location = parent;
+                                } else {
+                                    if (mod_time > gof.info.get_attribute_int64 (GLib.FileAttribute.TIME_MODIFIED)) {
+                                        gof.info.set_attribute_uint64 (GLib.FileAttribute.TIME_MODIFIED, mod_time);
+                                    }
+
+                                    var dt = new DateTime.from_unix_local ((int64)mod_time);
+                                    gof.formated_modified = PF.FileUtils.get_formatted_date_time (dt);
+                                }
+
+                                file_hash.insert (gof.location, gof);
+                                after_load_file (gof, show_hidden, file_loaded_func);
+                            }
                         }
                     }
                 } catch (Error e) {
