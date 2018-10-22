@@ -32,8 +32,9 @@ public class PopupMenuBuilder : Object {
 
     public Gtk.Menu build_from_model (MenuModel model) {
         var menu = new Gtk.Menu.from_model (model);
-        for (int lasting = menu_items.length; lasting >= 0; lasting--) {
-            menu.prepend (menu_items[lasting]);
+        for (int i = 0; i < menu_items.length; i++) {
+            menu.append (menu_items[i]);
+            menu.reorder_child (menu_items[i], i);
         }
 
         return menu;
