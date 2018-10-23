@@ -44,6 +44,9 @@ public class Marlin.Plugins.Cloud.Plugin : Marlin.Plugins.Base {
     public override void update_sidebar (Gtk.Widget widget) {
         var sidebar = widget as Marlin.AbstractSidebar;
         foreach (CloudProviders.Account account in cloud_manager.get_accounts ()) {
+            //  Fix menu loading with wrong order by forcing dbus to cache menu_model
+            account.menu_model.get_n_items ();
+
             var reference = sidebar.add_plugin_item (adapt_plugin_item (account), Marlin.PlaceType.NETWORK_CATEGORY);
             account.notify.connect (() => {
                 sidebar.update_plugin_item (adapt_plugin_item (account), reference);
